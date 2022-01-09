@@ -1,0 +1,50 @@
+{
+  "name": "@artkit/connect",
+  "version": "0.0.1",
+  "description": "A library to embed in generative art webpages",
+  "main": "lib/index.js",
+  "browser": "dist/index.js",
+  "files": [
+    "lib",
+    "dist"
+  ],
+  "types": "lib/index.d.ts",
+  "scripts": {
+    "build": "npm run clean && npm run build:node && npm run build:web",
+    "build:node": "tsc --declaration",
+    "build:watch": "tsc --declaration --watch",
+    "build:web": "webpack --env production",
+    "clean": "rm -rf ./lib ./dist",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "prepublishOnly": "npm run build"
+  },
+  "repository": "https://github.com/dabbott/artkit-connect",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "@types/jest": "^27.0.2",
+    "@types/node": "^16.11.7",
+    "jest": "^27.3.1",
+    "prettier": "^2.4.1",
+    "ts-jest": "^27.0.7",
+    "ts-loader": "^9.2.6",
+    "ts-node": "^10.4.0",
+    "typescript": "^4.4.4",
+    "webpack": "^5.65.0",
+    "webpack-cli": "^4.9.1"
+  },
+  "prettier": {
+    "proseWrap": "never",
+    "singleQuote": true,
+    "trailingComma": "es5",
+    "semi": false
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "testPathIgnorePatterns": [
+      "lib"
+    ]
+  }
+}
