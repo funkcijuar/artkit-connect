@@ -1,10 +1,19 @@
 export interface ConnectOptions {
-  previewImageURL(): Promise<string>
-  attributes(): Promise<Record<string, any>>
+  host?: IArtkitHost
+  targetOrigin?: string
+  previewImageURL?: () => string | Promise<string>
+  attributes?: () => Record<string, any> | Promise<Record<string, any>>
 }
 
 export interface IArtkitMessageEvent {
-  data: any
+  data: ArtkitMessageToEmbedded
+}
+
+export interface IArtkitParent {
+  postMessage(
+    data: ArtkitMessageToHost,
+    options: { targetOrigin: string }
+  ): void
 }
 
 export interface IArtkitHost {
@@ -12,41 +21,76 @@ export interface IArtkitHost {
     type: 'message',
     handler: (event: IArtkitMessageEvent) => void
   ): void
-  postMessage(data: any, options: { targetOrigin: string }): void
-  parent: IArtkitHost
+  parent: IArtkitParent
 }
 
-export function connect(options: ConnectOptions): void
-export function connect(host: IArtkitHost, options: ConnectOptions): void
-export function connect(
-  ...args:
-    | [options: ConnectOptions]
-    | [host: IArtkitHost, options: ConnectOptions]
-) {
-  const [host, options] =
-    args.length === 1 ? [window as IArtkitHost, args[0]] : args
+export const Message = {
+  connect: '@artkit:connect',
+  previewReady: '@artkit:previewReady',
+  attributes: '@artkit:attributes',
+  previewImageURL: '@artkit:previewImageURL',
+}
+
+export type ArtkitMessageToEmbedded =
+  | { type: typeof Message['attributes'] }
+  | { type: typeof Message['previewImageURL'] }
+
+export type ArtkitMessageToHost =
+  | {
+      type: typeof Message['connect']
+      features: ('attributes' | 'previewImageURL')[]
+    }
+  | {
+      type: typeof Message['previewReady']
+    }
+  | {
+      type: typeof Message['attributes']
+      attributes: Record<string, any>
+    }
+  | {
+      type: typeof Message['previewImageURL']
+      url: string
+    }
+
+export function connect(options: ConnectOptions) {
+  const { host = window as IArtkitHost } = options
+
+  const postMessageOptions = {
+    targetOrigin: options.targetOrigin || '*',
+  }
+
+  host.parent.postMessage(
+    {
+      type: Message.connect,
+      features: [
+        ...(options.attributes ? ['attributes' as const] : []),
+        ...(options.previewImageURL ? ['previewImageURL' as const] : []),
+      ],
+    },
+    postMessageOptions
+  )
 
   host.addEventListener('message', async (event) => {
     // Ensure a valid data object
     if (typeof event.data !== 'object' || event.data === null) return
 
     switch (event.data.type) {
-      case '@artkit:previewImage': {
-        const url = await options.previewImageURL()
+      case '@artkit:previewImageURL': {
+        const url = await options.previewImageURL!()
 
         host.parent.postMessage(
-          { type: '@artkit:previewImage', url },
-          { targetOrigin: '*' }
+          { type: Message.previewImageURL, url },
+          postMessageOptions
         )
 
         break
       }
       case '@artkit:attributes': {
-        const attributes = await options.attributes()
+        const attributes = await options.attributes!()
 
         host.parent.postMessage(
-          { type: '@artkit:attributes', attributes },
-          { targetOrigin: '*' }
+          { type: Message.attributes, attributes },
+          postMessageOptions
         )
 
         break
@@ -55,6 +99,16 @@ export function connect(
   })
 }
 
-export function previewReady(host: IArtkitHost = window) {
-  host.parent.postMessage({ type: 'previewReady' }, { targetOrigin: '*' })
+export interface PreviewReadyOptions {
+  host?: IArtkitHost
+  targetOrigin?: string
+}
+
+export function previewReady(options: PreviewReadyOptions = {}) {
+  const { host = window as IArtkitHost, targetOrigin } = options
+
+  host.parent.postMessage(
+    { type: Message.previewReady },
+    { targetOrigin: targetOrigin || '*' }
+  )
 }
