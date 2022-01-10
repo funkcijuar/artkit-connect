@@ -1,15 +1,13 @@
-# car-file
+# @artkit/connect
 
-A library for working with Car files.
+A library to embed in generative art webpages.
 
 ```bash
-npm install --save car-file
+npm install --save @artkit/connect
 ```
 
 OR
 
 ```bash
-yarn add car-file
+yarn add @artkit/connect
 ```
-
-This library is loosely based on: https://github.com/olizilla/ipfs-content-addressed-archiver (MIT)
