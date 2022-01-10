@@ -13,6 +13,11 @@ it('parses query parameters', () => {
     b: '456',
   })
 
+  expect(parseQueryParameters('a=123&b=456')).toEqual({
+    a: '123',
+    b: '456',
+  })
+
   expect(parseQueryParameters('?a=123&b=456')).toEqual({
     a: '123',
     b: '456',
@@ -33,6 +38,32 @@ it('parses query parameters', () => {
   ).toEqual({
     a: '123',
     b: '456',
+  })
+})
+
+it('parses query parameters with schema', () => {
+  expect(
+    parseQueryParameters('?a=123&b=456&c=true&d=1', {
+      a: 'string',
+      b: 'number',
+      c: 'boolean',
+      d: 'boolean',
+    })
+  ).toEqual({
+    a: '123',
+    b: 456,
+    c: true,
+    d: true,
+  })
+
+  expect(
+    parseQueryParameters('?a=abc&b=def', {
+      a: 'number',
+      b: 'boolean',
+    })
+  ).toEqual({
+    a: 0,
+    b: false,
   })
 })
 
