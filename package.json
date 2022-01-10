@@ -1,6 +1,6 @@
 {
   "name": "@artkit/connect",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "A library to embed in generative art webpages",
   "main": "lib/index.js",
   "browser": "dist/index.js",
