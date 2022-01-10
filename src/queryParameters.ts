@@ -34,8 +34,6 @@ export function parseQueryParameters(
         : [window.location.search, args[0]]
       : args
 
-  if (!encodedParameters) return {}
-
   const questionMarkIndex = encodedParameters.indexOf('?')
 
   if (questionMarkIndex !== -1) {
@@ -56,14 +54,20 @@ export function parseQueryParameters(
     .split('&')
     .reduce<Record<string, string | number | boolean>>((parameters, item) => {
       const [key, value] = item.split('=')
+
+      if (!key || !value) return parameters
+
       parameters[decodeURIComponent(key)] = decodeURIComponent(value)
       return parameters
     }, {})
 
   if (typeof schema === 'object' && schema !== null) {
-    for (let key of Object.keys(params)) {
+    const keys = new Set([...Object.keys(params), ...Object.keys(schema)])
+
+    for (let key of keys) {
       switch (schema[key]) {
         case 'string': {
+          params[key] = params[key] || ''
           break
         }
         case 'number': {

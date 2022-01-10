@@ -66,6 +66,25 @@ it('parses query parameters with schema', () => {
   })
 })
 
+it('parses malformated parameters', () => {
+  expect(Object.keys(parseQueryParameters(''))).toEqual([])
+  expect(Object.keys(parseQueryParameters('abc'))).toEqual([])
+  expect(Object.keys(parseQueryParameters('abc='))).toEqual([])
+  expect(Object.keys(parseQueryParameters('abc&def'))).toEqual([])
+
+  expect(
+    parseQueryParameters('', {
+      a: 'string',
+      b: 'number',
+      c: 'boolean',
+    })
+  ).toEqual({
+    a: '',
+    b: 0,
+    c: false,
+  })
+})
+
 function createContext() {
   const messages: ArtkitMessageToHost[] = []
 
@@ -83,6 +102,7 @@ describe('features', () => {
     const { host, messages } = createContext()
 
     await saveMetadata({
+      allowMultipleCalls: true,
       host,
       attributes: () => ({ foo: 'bar' }),
       image: () => 'hello',
@@ -101,6 +121,7 @@ describe('features', () => {
     const { host, messages } = createContext()
 
     await saveMetadata({
+      allowMultipleCalls: true,
       host,
       attributes: () => ({ foo: 'bar' }),
     })
