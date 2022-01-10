@@ -1,10 +1,9 @@
 import {
-  connect,
+  ArtkitMessageToHost,
   IArtkitHost,
-  IArtkitMessageEvent,
-  IArtkitParent,
   Message,
   parseQueryParameters,
+  saveMetadata,
 } from '..'
 
 it('parses query parameters', () => {
@@ -68,97 +67,51 @@ it('parses query parameters with schema', () => {
 })
 
 function createContext() {
-  const messages: any[] = []
+  const messages: ArtkitMessageToHost[] = []
 
-  let listener: (event: IArtkitMessageEvent) => void
-
-  let parent: IArtkitParent = {
+  const host: IArtkitHost = {
     postMessage(data) {
       messages.push(data)
     },
   }
 
-  let host: IArtkitHost = {
-    parent,
-    addEventListener(type, handler) {
-      listener = handler
-    },
-  }
-
-  const trigger = async (event: IArtkitMessageEvent) => listener(event)
-
-  return { host, parent, messages, trigger }
+  return { host, messages }
 }
 
 describe('features', () => {
-  it('attributes', async () => {
-    const { host, messages, trigger } = createContext()
-
-    connect({
-      host,
-      attributes() {
-        return { foo: 'bar' }
-      },
-    })
-
-    expect(messages).toEqual([
-      { type: Message.connect, features: ['attributes'] },
-    ])
-
-    await trigger({
-      data: {
-        type: Message.attributes,
-      },
-    })
-
-    expect(messages).toEqual([
-      { type: Message.connect, features: ['attributes'] },
-      { type: Message.attributes, attributes: { foo: 'bar' } },
-    ])
-  })
-
-  it('previewImageURL', async () => {
-    const { host, messages, trigger } = createContext()
-
-    connect({
-      host,
-      previewImageURL() {
-        return 'hello'
-      },
-    })
-
-    expect(messages).toEqual([
-      { type: Message.connect, features: ['previewImageURL'] },
-    ])
-
-    await trigger({
-      data: {
-        type: Message.previewImageURL,
-      },
-    })
-
-    expect(messages).toEqual([
-      { type: Message.connect, features: ['previewImageURL'] },
-      { type: Message.previewImageURL, url: 'hello' },
-    ])
-  })
-
-  it('register all features', () => {
+  it('attributes & image', async () => {
     const { host, messages } = createContext()
 
-    connect({
+    await saveMetadata({
       host,
-      previewImageURL() {
-        return 'hello'
-      },
-      attributes() {
-        return { foo: 'bar' }
-      },
+      attributes: () => ({ foo: 'bar' }),
+      image: () => 'hello',
     })
 
     expect(messages).toEqual([
-      { type: Message.connect, features: ['attributes', 'previewImageURL'] },
+      {
+        type: Message.saveMetadata,
+        attributes: { foo: 'bar' },
+        image: 'hello',
+      },
     ])
+  })
+
+  it('attributes only', async () => {
+    const { host, messages } = createContext()
+
+    await saveMetadata({
+      host,
+      attributes: () => ({ foo: 'bar' }),
+    })
+
+    expect(messages[0]).toEqual({
+      type: Message.saveMetadata,
+      attributes: { foo: 'bar' },
+      image: undefined,
+    })
+
+    expect('image' in messages[0]).toEqual(false)
   })
 })
 
