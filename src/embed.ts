@@ -23,7 +23,7 @@ export interface IArtkitHost {
 }
 
 export const Message = {
-  saveMetadata: '@artkit:saveMetadata',
+  saveMetadata: '@artkit:saveMetadata' as const,
 }
 
 export type ArtkitMessageToHost = {
@@ -43,7 +43,8 @@ export async function saveMetadata(options: ConnectOptions) {
     throw new Error(`artkit.saveMetadata() was called without any options!`)
   }
 
-  const { host = window as IArtkitHost, allowMultipleCalls = false } = options
+  const { host = window.parent as IArtkitHost, allowMultipleCalls = false } =
+    options
 
   if (called && !allowMultipleCalls) return
 
